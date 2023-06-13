@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import torch
 from utils.sliding_windows import sliding_window
 from torch.utils.data import Dataset, DataLoader
 
@@ -18,7 +19,12 @@ class MESADataset(Dataset):
         y = np.concatenate(y, axis=0)
         X_windowed = sliding_window(X, 256, 60)
         y_windowed = [[i[-1]] for i in sliding_window(y, 256, 60)]
-        return np.asarray(X_windowed), np.asarray(y_windowed).squeeze()
+        X_windowed = np.asarray(X_windowed, dtype=np.float32)
+        y_windowed = np.asarray(y_windowed)
+        #convert to tensors of type float16
+        X_windowed = torch.from_numpy(X_windowed).float()
+        y_windowed = torch.from_numpy(y_windowed).long()
+        return X_windowed, y_windowed.squeeze()
 
     def __len__(self):
         return len(self.X)
@@ -39,11 +45,11 @@ class SleepDataLoader():
         self.val_dataset = MESADataset(val_ids)
         self.test_dataset = MESADataset(test_ids)
 
-    def train(self, batch_size=256):
+    def train(self, batch_size=1200):
         return DataLoader(self.train_dataset, batch_size=batch_size, shuffle=False)
     
-    def val(self, batch_size=256):
+    def val(self, batch_size=1200):
         return DataLoader(self.val_dataset, batch_size=batch_size, shuffle=False)
     
-    def test(self, batch_size=256):
+    def test(self, batch_size=1200):
         return DataLoader(self.test_dataset, batch_size=batch_size, shuffle=False)
