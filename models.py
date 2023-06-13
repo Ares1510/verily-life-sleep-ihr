@@ -1,3 +1,4 @@
+import torch
 import pytorch_lightning as pl
 from torch import nn, optim
 from torchmetrics import MetricCollection, Accuracy, CohenKappa
@@ -92,9 +93,9 @@ class HeartRateNetwork(pl.LightningModule):
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
         #ignore values that were padded from metric calculation
-        mask = (x[:, 0] == 0) & (x[:, 1] == 0)
-        y_hat = y_hat[~mask]
-        y = y[~mask]
+        mask = torch.any(x != 0, dim=1).nonzero().squeeze()
+        y_hat = torch.index_select(y_hat, 0, mask)
+        y = torch.index_select(y, 0, mask)
         self.train_metrics(y_hat, y, on_epoch=True)
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
         self.log_dict(self.train_metrics, on_step=False, on_epoch=True, logger=True)
@@ -104,9 +105,9 @@ class HeartRateNetwork(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        mask = (x[:, 0] == 0) & (x[:, 1] == 0)
-        y_hat = y_hat[~mask]
-        y = y[~mask]
+        mask = torch.any(x != 0, dim=1).nonzero().squeeze()
+        y_hat = torch.index_select(y_hat, 0, mask)
+        y = torch.index_select(y, 0, mask)
         self.val_metrics(y_hat, y, on_epoch=True)
         self.log('val_loss', loss, on_step=True, on_epoch=True, logger=True)
         self.log_dict(self.val_metrics, on_step=False, on_epoch=True, logger=True)
@@ -116,9 +117,9 @@ class HeartRateNetwork(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        mask = (x[:, 0] == 0) & (x[:, 1] == 0)
-        y_hat = y_hat[~mask]
-        y = y[~mask]
+        mask = torch.any(x != 0, dim=1).nonzero().squeeze()
+        y_hat = torch.index_select(y_hat, 0, mask)
+        y = torch.index_select(y, 0, mask)
         self.test_metrics(y_hat, y, on_epoch=True)
         self.log('test_loss', loss, on_step=True, on_epoch=True, logger=True)
         self.log_dict(self.test_metrics, on_step=False, on_epoch=True, logger=True)

@@ -28,12 +28,14 @@ def process_subject(sub_id):
     df['stage'] = df['stage'].interpolate(method='ffill').astype(int)
     # create a new column for labels
     df = df[['IHR', 'stage']]
+    #reset the index
+    df.reset_index(inplace=True, drop=True)
     if len(df) >= 72000:
         # if so, truncate the df to 72000
         df = df.iloc[:72000]
     elif len(df) < 72000:
         # pad the df with zeros
-        df = df.resize(72000, fill_value=0)
+        df = df.reindex(range(72000), fill_value=0)
     # check is there is a df folder in the current directory
     if not os.path.exists('data'):
         os.mkdir('data')
